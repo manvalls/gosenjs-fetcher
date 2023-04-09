@@ -7,7 +7,7 @@ type RequestOptions = {
   version?: string
   retries?: number
   window?: Window
-} & RequestInit
+} & Omit<RequestInit, 'window'>
 
 type RequestResult = {
   version: string
