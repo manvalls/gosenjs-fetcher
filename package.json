@@ -25,6 +25,6 @@
   },
   "dependencies": {
     "@gosen/command-types": "^0.0.8",
-    "@gosen/run-resolver": "^0.0.7"
+    "@gosen/run-resolver": "^0.0.8"
   }
 }
