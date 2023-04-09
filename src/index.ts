@@ -1,9 +1,12 @@
 import { Command } from '@gosen/command-types'
 import { resolve, VersionMismatchError } from '@gosen/run-resolver'
 
+export const versionKey = '__GOSEN_PAGE_VERSION__'
+
 type RequestOptions = {
   version?: string
   retries?: number
+  window?: Window
 } & RequestInit
 
 type RequestResult = {
@@ -11,9 +14,23 @@ type RequestResult = {
   commands: Command[]
 }
 
-const request = async (url: string, options: RequestOptions): Promise<RequestResult> => {
-  const { version, retries = 1, ...init } = options
-  const res = await fetch(url, init)
+const request = async (url: string, options?: RequestOptions): Promise<RequestResult> => {
+  const { version: optionsVersion, retries = 1, window: w = window, ...init } = options || {}
+  const version = optionsVersion || w[versionKey] || ''
+
+  let query = 'format=json'
+  if (version) {
+    query += `&version=${version}`
+  }
+
+  let urlToFetch = url
+  if (urlToFetch.includes('?')) {
+    urlToFetch += `&${query}`
+  } else {
+    urlToFetch += `?${query}`
+  }
+
+  const res = await fetch(urlToFetch, init)
   const result = await res.json()
 
   if (result.error === 'VERSION_MISMATCH') {
