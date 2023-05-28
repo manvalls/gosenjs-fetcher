@@ -11,6 +11,7 @@ type RequestOptions = {
 
 type RequestResult = {
   version: string
+  url: string
   commands: Command[]
 }
 
@@ -23,19 +24,19 @@ const request = async (url: string, options?: RequestOptions): Promise<RequestRe
     query += `&version=${version}`
   }
 
-  let urlToFetch = url
-  if (urlToFetch.includes('?')) {
-    urlToFetch += `&${query}`
+  if (url.includes('?')) {
+    query = `&${query}`
   } else {
-    urlToFetch += `?${query}`
+    query = `?${query}`
   }
 
-  const res = await fetch(urlToFetch, init)
+  const res = await fetch(`${url}${query}`, init)
+  const finalURL = res.url.replace(query, '')
   const result = await res.json()
 
   if (result.error === 'VERSION_MISMATCH') {
     if (retries > 0) {
-      return await request(url, {
+      return await request(finalURL, {
         ...options,
         retries: retries - 1,
         version: result.serverVersion,
@@ -49,6 +50,7 @@ const request = async (url: string, options?: RequestOptions): Promise<RequestRe
     return {
       commands: [],
       version,
+      url: finalURL,
     }
   }
 
@@ -56,6 +58,7 @@ const request = async (url: string, options?: RequestOptions): Promise<RequestRe
     return {
       commands: await resolve(result, version),
       version,
+      url: finalURL,
     }
   } catch (err) {
     if (err instanceof VersionMismatchError) {
